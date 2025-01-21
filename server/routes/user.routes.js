@@ -1,7 +1,7 @@
 import {Router} from "express"
-import { userSignup } from "../controllers/user.controller.js";
+import { userLogin, userLogOut, userProfile, userSignup } from "../controllers/user.controller.js";
 import {body} from "express-validator"
-
+import { authUser } from "../middleware/auth.moddleware.js";
 
 const router = Router();
 
@@ -19,6 +19,16 @@ router.post("/signup",
 )
 
 
+router.post("/login",
+    body('email').isEmail().withMessage("Valid email is required"),
+    body('password').isLength({min : 4}).withMessage("Passowrd must be at least 3 char"),
+    userLogin
+)
+
+
+router.get("/logout" , authUser , userLogOut);
+
+router.get("/profile" , authUser , userProfile);
 
 
 

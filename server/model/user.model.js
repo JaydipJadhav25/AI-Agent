@@ -27,10 +27,11 @@ userSchema.methods.isvalidePassword = async function(password) {
 }
 
 userSchema.methods.genrateJwt = async function(){
+   
     const token = jwt.sign({
-      _id : this._id,
-      email : this._id  
-    }  , process.env.JWT_KET);
+      _id: this._id,
+      email: this.email
+    }, process.env.JWT_SCERET, { expiresIn: '24h' });
 
     return token
 }
