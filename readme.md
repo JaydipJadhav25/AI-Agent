@@ -1,16 +1,31 @@
-# Project Title
 
-## Description
-A brief description of what this project does and who it's for.
+## Server
 
-## Installation
-Instructions on how to install and set up the project.
+### Environment Variables
 
-## Usage
-Examples of how to use the project.
+- `PORT`: The port on which the server will run.
 
-## Contributing
-Guidelines for contributing to the project.
+### Dependencies
 
-## License
-Information about the project's license.
+- `cors`: Middleware for enabling CORS.
+- `dotenv`: Module to load environment variables from a `.env` file.
+- `express`: Web framework for Node.js.
+- `mongoose`: MongoDB object modeling tool.
+- `nodemon`: Tool for automatically restarting the server during development.
+
+### Scripts
+
+- `dev`: Starts the server using nodemon.
+
+### Files
+
+- `server.js`: Entry point of the server. Connects to the database and starts the server.
+- `index.js`: Sets up the Express application and middleware.
+- `db/dbConnection.js`: Contains the function to connect to the MongoDB database.
+
+### Example Usage
+
+To start the server, run:
+
+```sh
+npm run dev

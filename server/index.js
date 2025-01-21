@@ -3,6 +3,9 @@ dotenv.config();
 import express from "express"
 import {createServer} from "http"
 import cors from "cors"
+import userRoutes from "./routes/user.routes.js"
+
+
 
 
 
@@ -21,13 +24,13 @@ const corsOptions = {
   app.use(cors(corsOptions));
 
 
-
-
-
-
 app.get("/" , (req , res)=>{
     return res.send("hello world");
-})
+});
+
+
+
+app.use("/user" , userRoutes);
 
 
 export default server
