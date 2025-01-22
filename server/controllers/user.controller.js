@@ -1,7 +1,8 @@
 import { blacklistToken } from "../model/blackListToken.model.js";
 import { createUser , checkPasswordAndGenTokne } from "../services/user.service.js";
 import {validationResult} from "express-validator"
-
+// import redisClient from "../services/redis.service.js"
+import { userModel } from "../model/user.model.js";
 
 
 
@@ -63,13 +64,19 @@ const userLogin = async(req , res) =>{
         return res.status(401).json({ message : "user token genrate Error"});
         }
 
+        //send user 
+        const user = await userModel.findOne({email : email});
+        user.password = undefined;
+
+
         //set cookies
         return res
         .status(202)
         .cookie("token" , token)
         .json({
             message : "User login Sucessfully..",
-            token
+            token,
+            user
         });
 
 
@@ -108,7 +115,7 @@ const userLogOut = async(req, res) =>{
 
 
 const userProfile = async(req , res) =>{
-    
+
     return res.status(201).json(req.user);
 }
 
