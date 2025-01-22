@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { createProject } from "../controllers/project.controller.js";
+import { addUser, allProject, createProject, getProjectDetailes } from "../controllers/project.controller.js";
 import {authUser} from "../middleware/auth.moddleware.js"
 import { body } from "express-validator";
 
@@ -18,7 +18,17 @@ router.post("/create" , authUser ,
     , createProject);
 
 
+router.get("/all" , authUser , 
+    allProject
+)
 
+router.put("/adduser" , authUser , 
+    body("projectId").isString().withMessage("Projected is Must be requeied"),
+    body("users").isArray({min : 1}).withMessage("user is must be required"),
+    addUser
+)
+
+router.get("/get/:projectId" , authUser ,getProjectDetailes);
 
 
 export default router;

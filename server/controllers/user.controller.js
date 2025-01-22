@@ -1,5 +1,5 @@
 import { blacklistToken } from "../model/blackListToken.model.js";
-import { createUser , checkPasswordAndGenTokne } from "../services/user.service.js";
+import { createUser , checkPasswordAndGenTokne  , allUsers} from "../services/user.service.js";
 import {validationResult} from "express-validator"
 // import redisClient from "../services/redis.service.js"
 import { userModel } from "../model/user.model.js";
@@ -120,4 +120,25 @@ const userProfile = async(req , res) =>{
 }
 
 
-export {userSignup , userLogin , userLogOut , userProfile}
+const getAllUsers = async(req, res) =>{
+
+    const userId = req.user._id;
+    //get all user acccpeted loggned user
+
+    try {
+        const allUser = await allUsers(userId);
+
+        return res.status(201).json(allUser);
+
+
+    } catch (error) {
+
+        console.log("error : " , error);
+        return res.status(401).json({ message : error.message});
+        
+    }
+
+}
+
+
+export {userSignup , userLogin , userLogOut , userProfile  , getAllUsers}

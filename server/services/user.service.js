@@ -69,3 +69,16 @@ export const checkPasswordAndGenTokne = async(email , password) =>{
 
 }
 
+export const allUsers = async(userId)=>{
+
+    if(!userId){
+        throw new Error("UserId is required!")
+    }
+
+
+    // const allUsers = await userModel.findOne()
+    const allUsers = await userModel.find({ _id: { $ne: userId } });
+
+    return allUsers;
+
+}

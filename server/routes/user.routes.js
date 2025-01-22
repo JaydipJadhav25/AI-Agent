@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { userLogin, userLogOut, userProfile, userSignup } from "../controllers/user.controller.js";
+import { getAllUsers, userLogin, userLogOut, userProfile, userSignup } from "../controllers/user.controller.js";
 import {body} from "express-validator"
 import { authUser } from "../middleware/auth.moddleware.js";
 
@@ -30,7 +30,7 @@ router.get("/logout" , authUser , userLogOut);
 
 router.get("/profile" , authUser , userProfile);
 
-
+router.get("/all" , authUser , getAllUsers);
 
 
 export default router
