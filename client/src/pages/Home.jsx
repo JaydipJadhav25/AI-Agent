@@ -11,9 +11,6 @@ export default function Home() {
     console.log("current user : " , user);
 
     const navigate = useNavigate();
-  
-
-
 
 
 const[projectPanel , setProjectPanel] = useState(false);
@@ -79,6 +76,8 @@ const handlProjectNavigation = async(project) =>{
   })
 
 }
+
+
 
 useEffect(()=>{
   async function handleProject(){
@@ -153,6 +152,7 @@ const handleCancel = () => {
 
             }
      
+
 
 
 
@@ -259,8 +259,13 @@ const handleCancel = () => {
 
 
 <ToastContainer/>
-
 </main>
+<button
+onClick={()=>{
+  localStorage.clear("token")
+  navigate("/login")
+}}
+className="bg-red-600 p-3 m-4 rounded-lg text-white">LogOut</button>
  
    </>
   )

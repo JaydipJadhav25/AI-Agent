@@ -1,42 +1,152 @@
-import { useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import UserSelectionModal from "../components/UserSelectionModal";
+import axiosInstance from "../config/axiosConfig";
+import { ToastContainer , toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
 
 function Project() {
   const location = useLocation();
+  const navigate = useNavigate()
   const project = location.state?.project;
-  console.log("project : ", project);
   const [isOpen, setIsOpen] = useState(false);
+  
+
+
+
+  const[projectUsers , setProjectUsers] = useState([]);
+
+
+
+  const [addedUsers, setAddedUsers] = useState([]);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [users , setUsers] = useState([]);
+  
+  
+
+  const handleAddUser = async(data) => {
+
+    // console.log("function call............" , data);
+
+    // setAddedUsers((prevUsers) => [...prevUsers, ...data]);
+
+  try {
+    const response  = await axiosInstance.put("/project/adduser" , {
+      projectId : project._id,
+      users :  data
+    },{
+      headers :{
+           Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    })
+
+
+    console.log("Response : " , response.data);
+
+     toast.success("Add-Users  successful!", {
+      position: "top-right",
+      autoClose: 3000,
+    });
+
+    setTimeout(() => {
+      // navigate("/home");
+      //  // Replace "/home" with the correct route
+      console.log("call................................")
+      navigate("/");
+    }, 1500);
+
+
+   
+    
+  } catch (error) {
+    console.log("error : " , error.message);
+    toast.error(
+      error.response?.data?.message || "Add-Users failed. Please try again!",
+      {
+        position: "top-right",
+        autoClose: 3000,
+      }
+    );
+
+    
+  }
+
+
+    // console.log("addusers function call : " , addedUsers);
+
+  };
+
+
+  // function demo(data){
+  //   console.log("demo function call..................." , data);
+  // }
+
+
+  const handleShowUser = async()=>{
+    const responce = await axiosInstance.get("/user/all" ,{
+      headers :{
+
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+       
+      }
+    });
+
+    console.log("reponse : " , responce.data);
+    setUsers(responce.data)
+  }
+
+
+  
+  useEffect(()=>{
+    
+    // console.log("project : ", project);
+    setProjectUsers(project.users);
+    handleShowUser()
+
+
+
+},[project]);
+
 
   const toggleSidePanel = () => {
     setIsOpen(!isOpen);
   };
 
    // Example user list
-   const users = [
-    { email: "user1@example.com" },
-    { email: "user2@example.com" },
-    { email: "user3@example.com" },
-  ];
+  //  const users = [
+  //   { email: "user1@example.com" },
+  //   { email: "user2@example.com" },
+  //   { email: "user3@example.com" },
+
+  
 
   return (
-    <main className="w-[30%] h-screen flex">
+   <>
+    <main className="w-full h-screen bg-slate-500 flex">
+      {/* 1 */}
+<div className="w-[30%] h-screen flex">
+  
+      
       {/* Side Panel */}
       <div
-        className={`fixed top-0 left-0 h-full w-[300px] bg-white shadow-lg transform transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-[350px] bg-white shadow-lg transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-4">
          <div className="w-full flex justify-end pr-4">
-         <h2 className="text-lg font-bold mb-4" onClick={toggleSidePanel}><i className="ri-arrow-left-long-line"></i></h2>
-         </div>
+         <h2 className="text-lg font-bold mb-4" onClick={toggleSidePanel}><i className="ri-arrow-left-long-line"></i></h2>      </div>
 
          <section className="w-full h-full">
       
 
         {/* User List */}
         <div className="h-[90%] p-4 overflow-y-auto space-y-4">
-          {users.map((user, index) => (
+          {projectUsers.map((user, index) => (
 
             <div
               key={index}
@@ -64,11 +174,19 @@ function Project() {
       {/* Main Chat Section */}
       <section className="left bg-slate-300 w-full h-full">
         {/* Header */}
-        <header className="bg-gray-500 w-full h-[10%] flex justify-end p-5">
+        <header className="bg-gray-500 w-full h-[10%] flex justify-between p-5">
+          
+        <div
+        onClick={()=>setIsModalOpen(true)}
+        className="p-1 cursor-pointer rounded-lg active:border-2 border-white flex items-center">
+          <i className="ri-add-fill text-lg font-semibold">Add Collebroter</i>
+          </div>
+
           <i
-            className="ri-group-line font-semibold text-lg cursor-pointer border-2 border-black p-3 flex justify-center items-center rounded-[50%]"
+            className="ri-group-line font-semibold text-lg cursor-pointer border-2 border-black p-3 flex justify-center items-center rounded-[50%] hover:bg-orange-500"
             onClick={toggleSidePanel}
-          ></i>
+          >{project.users.length}</i>
+         
         </header>
 
         {/* Chat Messages */}
@@ -102,7 +220,18 @@ function Project() {
           </button>
         </div>
       </section>
+</div>
+
+       {/* add user module */}
+       {isModalOpen && (
+        <UserSelectionModal  users={users}  handleAddUser={handleAddUser} addedUsers={ projectUsers }  setIsModalOpen={setIsModalOpen}  />
+      )}
+
+
+<ToastContainer/>
     </main>
+ 
+   </>
   );
 }
 

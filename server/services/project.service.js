@@ -33,7 +33,7 @@ export const getUserProject = async(userId)=>{
         throw new Error("UserId is field required!");
     }
     // const projects = await projectModel.find({users :[userId]});
-    const projects = await projectModel.find({users :userId});
+    const projects = await projectModel.find({users :userId}).populate("users");
 
 
     return projects;
