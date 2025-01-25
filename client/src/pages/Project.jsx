@@ -126,7 +126,7 @@ function Project() {
 
   return (
    <>
-    <main className="w-full h-screen bg-slate-500 flex">
+    <main className="w-full h-screen flex">
       {/* 1 */}
 <div className="w-[30%] h-screen flex">
   
@@ -138,14 +138,15 @@ function Project() {
         }`}
       >
         <div className="p-4">
-         <div className="w-full flex justify-end pr-4">
-         <h2 className="text-lg font-bold mb-4" onClick={toggleSidePanel}><i className="ri-arrow-left-long-line"></i></h2>      </div>
-
+         <div className="w-full flex justify-between pr-4 bg-gray-200 pt-3">
+            <h1 className="text-2xl font-bold w-[50%] text-center">Collabroters</h1>
+         <h2 className="text-lg font-bold mb-4 cursor-pointer bg-slate-400 p-1 rounded-full px-3 active:bg-blue-600" onClick={toggleSidePanel}><i className="ri-arrow-left-long-line"></i></h2>      </div>
          <section className="w-full h-full">
       
 
         {/* User List */}
         <div className="h-[90%] p-4 overflow-y-auto space-y-4">
+          
           {projectUsers.map((user, index) => (
 
             <div
