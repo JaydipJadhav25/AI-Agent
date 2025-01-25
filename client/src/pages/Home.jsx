@@ -5,10 +5,19 @@ import { toast , ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
+
+
 export default function Home() {
   
+ 
+
+
+
+
   const {user } = useContext(UserContext);
     console.log("current user : " , user);
+
+
 
     const navigate = useNavigate();
 
@@ -20,7 +29,11 @@ const[deleteProject , setDeleteProject] = useState(null)
 const[deleteProjectPanel , setDeleteProjectPanel] = useState(false);
 
 
+
 const token  = localStorage.getItem("token");
+
+
+
 
 const handleCreate = async() => {
 try {
@@ -98,9 +111,12 @@ useEffect(()=>{
 
 } , [token])
 
+
+
 const handleCancel = () => {
   setProjectName(""); // Clear the input field
 };
+
 
 
 

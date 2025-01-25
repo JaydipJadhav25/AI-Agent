@@ -4,6 +4,7 @@ import UserSelectionModal from "../components/UserSelectionModal";
 import axiosInstance from "../config/axiosConfig";
 import { ToastContainer , toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { initSocket } from "../config/socketIo";
 
 
 
@@ -12,19 +13,18 @@ function Project() {
   const navigate = useNavigate()
   const project = location.state?.project;
   const [isOpen, setIsOpen] = useState(false);
-  
-
-
 
   const[projectUsers , setProjectUsers] = useState([]);
-
-
 
   const [addedUsers, setAddedUsers] = useState([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [users , setUsers] = useState([]);
+
+
+
+    
   
   
 
@@ -102,6 +102,12 @@ function Project() {
 
   
   useEffect(()=>{
+
+    //socket io connection
+    const socket = initSocket(project._id);
+  
+
+
     
     // console.log("project : ", project);
     setProjectUsers(project.users);
