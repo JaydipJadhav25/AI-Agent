@@ -82,3 +82,14 @@ export const allUsers = async(userId)=>{
     return allUsers;
 
 }
+
+
+export const findUserOnId = async(userId) =>{
+    if(!userId){
+        throw new Error("UserId is required!");
+    }
+
+    const user = await userModel.find({_id : userId});
+
+    return user[0];
+}

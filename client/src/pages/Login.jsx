@@ -37,6 +37,7 @@ console.log("current user : " , user);
 
      //set token
      localStorage.setItem("token" , responce.data.token);
+     localStorage.setItem("userId" , responce.data.user._id)
 
     await setUser(responce.data.user);
 

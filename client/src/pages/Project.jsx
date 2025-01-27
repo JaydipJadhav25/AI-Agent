@@ -1,10 +1,16 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { data, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UserSelectionModal from "../components/UserSelectionModal";
 import axiosInstance from "../config/axiosConfig";
 import { ToastContainer , toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { initSocket } from "../config/socketIo";
+import { initSocket  , sendMeesage , receiveMessage} from "../config/socketIo";
+import {useContext} from "react"
+import { UserContext } from "../context/UserContext";
+
+
+
+
 
 
 
@@ -13,19 +19,24 @@ function Project() {
   const navigate = useNavigate()
   const project = location.state?.project;
   const [isOpen, setIsOpen] = useState(false);
-
   const[projectUsers , setProjectUsers] = useState([]);
-
   const [addedUsers, setAddedUsers] = useState([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [users , setUsers] = useState([]);
+  const [message, setMessage] = useState(""); // Current message input
+  const [messages, setMessages] = useState([]); // Unified chat messages state
+  // const[remoteUser , setRemoteUser] = useState(null);
+  const[onlineUsers , setOnlineUsers] = useState(0);
 
-    const [users , setUsers] = useState([]);
 
-
-
+const {user } = useContext(UserContext);
+console.log("current user : " , user);
     
-  
+// if(!user){
+//   localStorage.clear("token")
+//   localStorage.clear("userId" )
+//  return navigate("/login")
+// }
   
 
   const handleAddUser = async(data) => {
@@ -101,21 +112,43 @@ function Project() {
 
 
   
-  useEffect(()=>{
-
-    //socket io connection
-    const socket = initSocket(project._id);
+  useEffect(() => {
+    if (!project) return; // Ensure project is defined
   
+    setProjectUsers(project?.users || []);
+    handleShowUser();
+  
+    // Initialize socket connection
+    console.log("projectId : " , project._id)
+    initSocket(project._id);
+
+    //get online user
+  
+  
+    // Listen for incoming messages
+    receiveMessage("message", (data) => {
+      // console.log("Message received:", data);
+      // setRemoteUser(data.from);
+      setMessages((prev) => [...prev, { text: data.message, sender: data.from }]);
+    });
 
 
-    
-    // console.log("project : ", project);
-    setProjectUsers(project.users);
-    handleShowUser()
+   receiveMessage("online" , (data)=>{
+    console.log("online users : " , data);
+    setOnlineUsers(data);
+   })
+  
+  }, [project]);
+  
+ 
+  // useEffect(()=>{
+  //   console.log("CAlll.........................");
+   
+  
+  // },[]);
 
 
 
-},[project]);
 
 
   const toggleSidePanel = () => {
@@ -128,6 +161,19 @@ function Project() {
   //   { email: "user2@example.com" },
   //   { email: "user3@example.com" },
 
+//listen event and add event using socket
+
+const handlUserMessageSend = async()=>{
+  // console.log("message:" , message ,);
+     sendMeesage("message" , message, localStorage.getItem("userId"));
+
+    setMessages((prev) => [...prev, { text: message, sender: "client" }]); // Update client messages
+    setMessage(""); // Reset input field
+
+}
+
+
+console.log(messages)
   
 
   return (
@@ -194,38 +240,88 @@ function Project() {
             onClick={toggleSidePanel}
           >{project.users.length}</i>
          
+         
         </header>
+       <div className="bg-green-600">{
+        onlineUsers
+        }</div>
 
         {/* Chat Messages */}
         <div className="h-[80%] p-4 overflow-y-auto space-y-4">
           {/* User's message */}
-          <div className="flex flex-col items-end">
+
+            {/* <div className="flex flex-col items-end">
             <span className="text-sm text-gray-700">user@example.com</span>
             <div className="bg-blue-500 text-white px-4 py-2 rounded-lg max-w-[75%]">
-              Hi! This is my message.
+             {message}
             </div>
-          </div>
+          </div> */}
+          
 
           {/* Other user's message */}
-          <div className="flex flex-col items-start">
-            <span className="text-sm text-gray-700">otheruser@example.com</span>
-            <div className="bg-yellow-100 text-black px-4 py-2 rounded-lg max-w-[75%]">
-              Hello! This is a reply from another user.
+         {/* <div className="flex flex-col items-start">
+           <span className="text-sm text-gray-700">otheruser@example.com</span>
+           <div className="bg-yellow-100 text-black px-4 py-2 rounded-lg max-w-[75%]">
+           {message}
+           </div>
+         </div> */}
+         
+
+         {/* all messages */}
+
+         {
+
+          messages.map((msg , i)=>(
+            <div 
+            key={i}
+            className={`flex flex-col ${
+              msg.sender === "client" 
+              ? "items-end"
+              : "items-start"}`}
+            >
+                    <span className="text-sm text-black">
+               {msg.sender === "client" ? "You" : msg.sender}
+                </span>
+
+            <div className={`px-4 py-2 rounded-lg max-w-[75%] ${
+             msg.sender === "client" 
+             ? "bg-blue-500 text-white"
+             : "bg-yellow-100 text-black" 
+            }`}>
+             {msg.text}
             </div>
-          </div>
-        </div>
+            </div>
+          ))
+
+
+         }
+
+
+         </div>
 
         {/* Input Field */}
-        <div className="h-[10%] flex items-center">
+          <form  onSubmit={(e)=>{
+            e.preventDefault();
+            handlUserMessageSend()
+          }}
+className="h-[10%] flex items-center bg-orange-200"
+          >
+      
           <input
-            type="text"
-            className="flex-grow h-4/5 border-none focus:outline-none placeholder-gray-400 px-3"
-            placeholder="Enter Message"
-          />
-          <button className="text-3xl p-1 text-blue-500 hover:text-blue-700 focus:outline-none">
-            <i className="ri-send-plane-fill"></i>
-          </button>
-        </div>
+          value={message}
+onChange={(e)=>{
+  setMessage(e.target.value);
+}}
+
+  type="text"
+  className="flex-grow h-4/5 border-none focus:outline-none placeholder-gray-400 px-3"
+  placeholder="Enter Message"
+/>
+<button className="text-3xl p-1 text-blue-500 hover:text-blue-700 focus:outline-none">
+  <i className="ri-send-plane-fill"></i>
+</button>
+    
+          </form>
       </section>
 </div>
 

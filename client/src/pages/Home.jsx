@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState ,  } from "react"
-import { UserContext } from "../context/UserContext"
+// import { UserContext } from "../context/UserContext"
 import axiosInstance from "../config/axiosConfig";
 import { toast , ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css";
@@ -14,8 +14,8 @@ export default function Home() {
 
 
 
-  const {user } = useContext(UserContext);
-    console.log("current user : " , user);
+  // const {user } = useContext(UserContext);
+  //   console.log("current user : " , user);
 
 
 
@@ -279,6 +279,7 @@ const handleCancel = () => {
 <button
 onClick={()=>{
   localStorage.clear("token")
+  localStorage.clear("userId" )
   navigate("/login")
 }}
 className="bg-red-600 p-3 m-4 rounded-lg text-white">LogOut</button>
