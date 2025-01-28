@@ -1,5 +1,5 @@
-import { data, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import {  useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import UserSelectionModal from "../components/UserSelectionModal";
 import axiosInstance from "../config/axiosConfig";
 import { ToastContainer , toast } from "react-toastify";
@@ -29,8 +29,9 @@ function Project() {
   const[onlineUsers , setOnlineUsers] = useState(0);
 
 
+
 const {user } = useContext(UserContext);
-console.log("current user : " , user);
+// console.log("current user : " , user);
     
 // if(!user){
 //   localStorage.clear("token")
@@ -56,7 +57,7 @@ console.log("current user : " , user);
     })
 
 
-    console.log("Response : " , response.data);
+    // console.log("Response : " , response.data);
 
      toast.success("Add-Users  successful!", {
       position: "top-right",
@@ -112,7 +113,10 @@ console.log("current user : " , user);
 
 
   
+  const userId = localStorage.getItem("userId");
+
   useEffect(() => {
+
     if (!project) return; // Ensure project is defined
   
     setProjectUsers(project?.users || []);
@@ -122,8 +126,23 @@ console.log("current user : " , user);
     console.log("projectId : " , project._id)
     initSocket(project._id);
 
+     sendMeesage("joinProject" , project._id , userId);
+
+
+
     //get online user
+
+    receiveMessage("updateUsers" , (data)=>{
+      //  console.log("received: count", data);
+       console.log("received count", data.users.length);
+       setOnlineUsers(data.users.length);
+
+    })
+
   
+   
+
+
   
     // Listen for incoming messages
     receiveMessage("message", (data) => {
@@ -133,19 +152,72 @@ console.log("current user : " , user);
     });
 
 
-   receiveMessage("online" , (data)=>{
-    console.log("online users : " , data);
-    setOnlineUsers(data);
-   })
+  //  receiveMessage("online" , (data)=>{
+  //   console.log("online users : " , data);
+  //   setOnlineUsers(data);
+  //  })
   
-  }, [project]);
+  return () => {
+    // Notify server that the user left the project
+    // socket.emit("leaveProject", { userId, projectId });
+    console.log("User left project:");
+    sendMeesage("leaveProject",project._id , userId)
+};
+
+
+  }, [project, userId]);
   
- 
-  // useEffect(()=>{
-  //   console.log("CAlll.........................");
-   
-  
-  // },[]);
+//    // Notify the server when the user leaves the page
+//    document.addEventListener("visibilitychange", () => {
+//     if (document.visibilityState === "hidden") {
+//         // User left the page (or switched tabs)
+//         // socket.emit("leaveProject", { userId: "user123", projectId: "project456" });
+//         console.log("User left the project page.");
+//     } else if (document.visibilityState === "visible") {
+//         // User came back to the page
+//         // socket.emit("joinProject", { userId: "user123", projectId: "project456" });
+//         console.log("User joined the project page.");
+//     }
+// });
+
+
+
+
+  //online
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+        // const currentPath = location.pathname;
+        // const projectId = currentPath.split("/")[2];
+
+        if (document.visibilityState === "hidden") {
+
+          sendMeesage("leaveProject",project._id , userId)
+            // socket.emit("leaveProject", { userId, projectId });
+            console.log("User is inactive (tab hidden).");
+
+        } else if (document.visibilityState === "visible") {
+     sendMeesage("joinProject" , project._id , userId);
+              
+            // socket.emit("joinProject", { userId, projectId });
+
+            console.log("User is active (tab visible).");
+        }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+}, [location, project._id, userId]);
+
+
+
+
+
+
+
 
 
 
@@ -173,16 +245,29 @@ const handlUserMessageSend = async()=>{
 }
 
 
-console.log(messages)
+// console.log(messages)
+
+ // Create a ref for the chat container
+ const messageBoxRef = useRef(null);
+
+  // Function to scroll to the bottom
+  const scrollToBottom = () => {
+    if (messageBoxRef.current) {
+      messageBoxRef.current.scrollTop = messageBoxRef.current.scrollHeight;
+    }
+  };
   
+    // Scroll to the bottom when messages change
+    useEffect(() => {
+      scrollToBottom();
+    }, [messages]); // Trigger scroll when messages array changes
 
   return (
    <>
     <main className="w-full h-screen flex">
       {/* 1 */}
 <div className="w-[30%] h-screen flex">
-  
-      
+ 
       {/* Side Panel */}
       <div
         className={`fixed top-0 left-0 h-full w-[350px] bg-white shadow-lg transform transition-transform duration-300 ${
@@ -240,14 +325,18 @@ console.log(messages)
             onClick={toggleSidePanel}
           >{project.users.length}</i>
          
-         
         </header>
-       <div className="bg-green-600">{
-        onlineUsers
-        }</div>
-
+         <div className="flex justify-center p-1">
+          <h1
+          onClick={()=>{
+            window.location.reload();
+          }}
+          className="bg-green-500 rounded-lg cursor-pointer p-1 hover:bg-orange-600"
+          >Active Users :({onlineUsers})</h1>
+         </div>
+ 
         {/* Chat Messages */}
-        <div className="h-[80%] p-4 overflow-y-auto space-y-4">
+        <div className="h-[75%] p-4 overflow-y-auto space-y-4">
           {/* User's message */}
 
             {/* <div className="flex flex-col items-end">
@@ -269,32 +358,32 @@ console.log(messages)
 
          {/* all messages */}
 
-         {
+         <div 
+           ref={messageBoxRef}
+         className="scroll-container h-[480px] overflow-y-scrol pr-4 pl-4">
+  {messages.map((msg, i) => (
+    <div
+      key={i}
+      className={`flex flex-col ${
+        msg.sender === "client" ? "items-end" : "items-start"
+      }`}
+    >
+      <span className="text-sm text-black">
+        {msg.sender === "client" ? "You" : msg.sender}
+      </span>
+      <div
+        className={`px-4 py-2 rounded-lg max-w-[75%] ${
+          msg.sender === "client"
+            ? "bg-blue-500 text-white"
+            : "bg-yellow-100 text-black"
+        }`}
+      >
+        {msg.text}
+      </div>
+    </div>
+  ))}
+</div>
 
-          messages.map((msg , i)=>(
-            <div 
-            key={i}
-            className={`flex flex-col ${
-              msg.sender === "client" 
-              ? "items-end"
-              : "items-start"}`}
-            >
-                    <span className="text-sm text-black">
-               {msg.sender === "client" ? "You" : msg.sender}
-                </span>
-
-            <div className={`px-4 py-2 rounded-lg max-w-[75%] ${
-             msg.sender === "client" 
-             ? "bg-blue-500 text-white"
-             : "bg-yellow-100 text-black" 
-            }`}>
-             {msg.text}
-            </div>
-            </div>
-          ))
-
-
-         }
 
 
          </div>
