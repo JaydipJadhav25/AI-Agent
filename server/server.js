@@ -74,7 +74,7 @@ io.on("connect", (socket) => {
     });
 
 
-    
+
     socket.on("message", async (msg) => {
         const user = await findUserOnId(msg.sender);
         socket.to(socket.projectId).emit("message", {
@@ -85,6 +85,7 @@ io.on("connect", (socket) => {
 
     socket.on("disconnect", () => {
 
+
         for (const projectId in projectUsers) {
             projectUsers[projectId] = projectUsers[projectId].filter((id) => id !== socket.userId);
             io.to(projectId).emit("updateUsers", {
@@ -93,6 +94,7 @@ io.on("connect", (socket) => {
             });
         }
         console.log("User disconnected:", socket.id);
+        socket.leave(socket.projectId);
     });
 });
 
