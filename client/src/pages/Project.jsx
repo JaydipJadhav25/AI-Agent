@@ -7,7 +7,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { initSocket  , sendMeesage , receiveMessage} from "../config/socketIo";
 import {useContext} from "react"
 import { UserContext } from "../context/UserContext";
-
+import gsap from "gsap"
+import Markdown from 'markdown-to-jsx'
 
 
 
@@ -27,6 +28,7 @@ function Project() {
   const [messages, setMessages] = useState([]); // Unified chat messages state
   // const[remoteUser , setRemoteUser] = useState(null);
   const[onlineUsers , setOnlineUsers] = useState(0);
+
 
 
 
@@ -120,6 +122,7 @@ const {user } = useContext(UserContext);
     if (!project) return; // Ensure project is defined
   
     setProjectUsers(project?.users || []);
+
     handleShowUser();
   
     // Initialize socket connection
@@ -148,6 +151,7 @@ const {user } = useContext(UserContext);
     receiveMessage("message", (data) => {
       // console.log("Message received:", data);
       // setRemoteUser(data.from);
+
       setMessages((prev) => [...prev, { text: data.message, sender: data.from }]);
     });
 
@@ -166,6 +170,15 @@ const {user } = useContext(UserContext);
 
 
   }, [project, userId]);
+
+
+
+
+
+
+
+
+
   
 //    // Notify the server when the user leaves the page
 //    document.addEventListener("visibilitychange", () => {
@@ -223,9 +236,12 @@ const {user } = useContext(UserContext);
 
 
 
-  const toggleSidePanel = () => {
-    setIsOpen(!isOpen);
-  };
+const toggleSidePanel = () => {
+  setIsOpen(!isOpen);
+  // Animate side panel sliding effect
+  gsap.to(".side-panel", { x: isOpen ? "-100%" : "0", duration: 0.5, ease: "power2.out" });
+
+};
 
    // Example user list
   //  const users = [
@@ -270,7 +286,7 @@ const handlUserMessageSend = async()=>{
  
       {/* Side Panel */}
       <div
-        className={`fixed top-0 left-0 h-full w-[350px] bg-white shadow-lg transform transition-transform duration-300 ${
+        className={`side-panel fixed top-0 left-0 h-full w-[350px] bg-white shadow-lg transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -359,8 +375,9 @@ const handlUserMessageSend = async()=>{
          {/* all messages */}
 
          <div 
-           ref={messageBoxRef}
-         className="scroll-container h-[480px] overflow-y-scrol pr-4 pl-4">
+  ref={messageBoxRef}
+  className="scroll-container h-[480px] overflow-y-scroll pr-4 pl-4"
+>
   {messages.map((msg, i) => (
     <div
       key={i}
@@ -371,18 +388,27 @@ const handlUserMessageSend = async()=>{
       <span className="text-sm text-black">
         {msg.sender === "client" ? "You" : msg.sender}
       </span>
+
       <div
         className={`px-4 py-2 rounded-lg max-w-[75%] ${
           msg.sender === "client"
             ? "bg-blue-500 text-white"
+            : msg.sender === "@Ai"
+            ? "bg-purple-500 text-black font-bold overflow-auto" // Highlight AI messages
             : "bg-yellow-100 text-black"
         }`}
       >
-        {msg.text}
+        {msg.sender == "@Ai" 
+        ?
+        <Markdown>{msg.text}</Markdown>
+        : msg.text
+        
+        }
       </div>
     </div>
   ))}
 </div>
+
 
 
 

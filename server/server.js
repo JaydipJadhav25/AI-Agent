@@ -5,6 +5,10 @@ import { dbConnect } from "./db/dbConnection.js";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { findUserOnId } from "./services/user.service.js";
+import { genrateResult } from "./services/ai.service.js";
+
+
+
 
 await dbConnect();
 
@@ -44,7 +48,7 @@ const projectUsers = {};
 
 // Socket connection handler
 io.on("connect", (socket) => {
-    console.log("User connected:", socket.id);
+    // console.log("User connected:", socket.id);
     socket.join(socket.projectId);
 
     socket.on("joinProject", ({ message: projectId, sender: userId }) => {
@@ -76,11 +80,66 @@ io.on("connect", (socket) => {
 
 
     socket.on("message", async (msg) => {
+
+        //check message for ai
+        const isMessageForAi= msg.message.includes('@ai')
+
         const user = await findUserOnId(msg.sender);
         socket.to(socket.projectId).emit("message", {
             message: msg.message,
             from: user.email,
         });
+
+            
+        if(isMessageForAi){
+
+            // const prompt = msg.message.replace('@ai' ,'');
+
+
+            // const replay = await genrateResult(prompt)
+
+            // console.log("Message for ai!" , prompt);
+            // console.log("replay  form ai!" , replay);
+
+
+
+            const from = {
+             _id : "100",
+             email : "@ai"
+            }
+
+        
+    
+
+
+
+            io.to(socket.projectId).emit("message" , {
+                message : "this is Ai replay",
+                from : "@Ai"
+            })
+
+
+            //send ai replay only perticuler
+
+           
+
+
+            // io.to(socket.id).emit("message" , {
+            //     message : replay,
+            //     from : "@Ai"
+            // });
+
+
+                return;
+        }
+
+        // const user = await findUserOnId(msg.sender);
+        // socket.to(socket.projectId).emit("message", {
+        //     message: msg.message,
+        //     from: user.email,
+        // });
+
+
     });
 
     socket.on("disconnect", () => {
