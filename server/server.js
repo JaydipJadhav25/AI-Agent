@@ -53,7 +53,7 @@ io.on("connect", (socket) => {
 
     socket.on("joinProject", ({ message: projectId, sender: userId }) => {
 
-        console.log("joinProject" , projectId, userId);
+        // console.log("joinProject" , projectId, userId);
 
         if (!projectUsers[projectId]) projectUsers[projectId] = [];
 
@@ -79,50 +79,67 @@ io.on("connect", (socket) => {
 
 
 
+
     socket.on("message", async (msg) => {
 
+        
+
+        // console.log("data is : " , msg);
         //check message for ai
         const isMessageForAi= msg.message.includes('@ai')
 
         const user = await findUserOnId(msg.sender);
-        socket.to(socket.projectId).emit("message", {
-            message: msg.message,
-            from: user.email,
-        });
 
-            
+        //ai message alos send in all which users work on project
+            socket.to(socket.projectId).emit("message", {
+                message: msg.message,
+                from: user.email,
+            });
+
+         
+        
         if(isMessageForAi){
 
-            // const prompt = msg.message.replace('@ai' ,'');
+            const prompt = msg.message.replace('@ai' ,'');
 
 
-            // const replay = await genrateResult(prompt)
+
+            const replay = await genrateResult(prompt)
 
             // console.log("Message for ai!" , prompt);
             // console.log("replay  form ai!" , replay);
 
 
-
+        
             const from = {
              _id : "100",
              email : "@ai"
             }
 
-        
+
+                
+              
     
+    
+ 
 
-
+            //send replay to all connected users 
 
             io.to(socket.projectId).emit("message" , {
-                message : "this is Ai replay",
+                // message : "this is Ai replay",
+                message : replay,
                 from : "@Ai"
             })
 
+            
+
+    
+
+
+          
+
 
             //send ai replay only perticuler
-
-           
-
 
             // io.to(socket.id).emit("message" , {
             //     message : replay,
@@ -156,6 +173,8 @@ io.on("connect", (socket) => {
         socket.leave(socket.projectId);
     });
 });
+
+
 
 server.listen(process.env.PORT || 3000, () => {
     console.log(`Server starting on port ${process.env.PORT || 3000}`);

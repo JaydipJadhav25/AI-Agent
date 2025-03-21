@@ -53,3 +53,20 @@ console.log(isPrimeOptimized(100)); // false
 ```
 
 Both functions achieve the same result.  `isPrimeOptimized` is generally preferred for larger numbers due to its better performance.  Choose the method that best suits your needs and understanding.  Remember that checking for primality becomes computationally expensive for extremely large numbers.
+///////////////////////////////////////////////////////////////////////////////////
+
+
+
+{"text": "This is the file structure for a basic Express.js server.  This example includes error handling and demonstrates modularity.  Remember to install the dependencies using `npm install`.", "fileTree": {"app.js": {"file": {"contents": "const express = require('express');   const app = express();   const port = process.env.PORT || 3000;   const routes = require('./routes'); // Import routes      // Middleware to parse JSON bodies   app.use(express.json());      // Use the routes   app.use('/api', routes);      // Error handling middleware   app.use((err, req, res, next) => {     console.error(err.stack);     res.status(500).json({ error: 'Internal Server Error' });   });      app.listen(port, () => {     console.log(`Server listening on port ${port}`);   });   "}}, "rs.Router();      // Saoutes.js": {"file": {"contents": "const express = require('express');const router = expresmple route   router.get('/', (req, res) => {     res.json({ message: 'Hello from Express!' });   });      //Another route example   router.post('/data', (req, res) => {     try {       const data = req.body;       //Process the data       res.status(201).json({ message: 'Data received successfully', data: data });     } catch (error) {       console.error('Error processing data:', error);       res.status(500).json({ error: 'Failed to process data' });     }   });      module.exports = router;"}}, "package.json": {"file": {"contents": "{     \"name\": \"express-server\",     \"version\": \"1.0.0\",     \"description\": \"A basic Express.js server\",     \"main\": \"app.js\",     \"scripts\": {       \"start\": \"node app.js\"     },     \"dependencies\": {       \"express\": \"^4.18.2\"     }   }   "}}}}
+
+
+
+
+
+
+"{"text": "This is the file tree structure for a basic Express.js server.  This example includes error handling and demonstrates good modularity.",
+ "fileTree": {
+  "app.js": {"file": {"contents": "const express = require('express');\nconst app = express();\nconst port = process.env.PORT || 3000;\nconst routes = require('./routes'); // Import routes\n\n// Middleware to parse JSON bodies\napp.use(express.json());\n\n// Use routes\napp.use('/api', routes);\n\n// Error handling middleware\napp.use((err, req, res, next) => {\n  console.error(err.stack);\n  res.status(500).json({ error: 'Internal Server Error' });\n});\n\napp.listen(port, () => {\n  console.log(`Server listening on port ${port}`);\n});\n"}}, 
+  "routes.js": {"file": {"contents": "const express = require('express');\nconst router = express.Router();\n\n// Example route\nrouter.get('/', (req, res) => {\n  res.json({ message: 'Hello from Express!' });\n});\n\n// Example route with error handling\nrouter.get('/error', (req, res) => {\n  throw new Error('Something went wrong!');\n});\n\nmodule.exports = router;"}}, "package.json": {"file": {"contents": "{\n  \"name\": \"express-server\",\n  \"version\": \"1.0.0\",\n  \"description\": \"A basic Express.js server\",\n  \"main\": \"app.js\",\n  \"scripts\": {\n    \"start\": \"node app.js\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.18.2\"\n  }\n}\n"}}}, 
+  "buildCommand": {"mainItem": "npm", "commands": ["install"]}, 
+  "startCommand": {"mainItem": "node", "commands": ["app.js"]}}"

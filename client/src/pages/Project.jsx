@@ -9,8 +9,10 @@ import {useContext} from "react"
 import { UserContext } from "../context/UserContext";
 import gsap from "gsap"
 import Markdown from 'markdown-to-jsx'
-
-
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import hljs from 'highlight.js';
+import "highlight.js/styles/atom-one-dark.css"; // VS Code-like theme
 
 
 
@@ -28,6 +30,17 @@ function Project() {
   const [messages, setMessages] = useState([]); // Unified chat messages state
   // const[remoteUser , setRemoteUser] = useState(null);
   const[onlineUsers , setOnlineUsers] = useState(0);
+  const[mode , setMode] = useState("public");
+  const[fileTree , setFileTree] = useState({
+    "app.js": {
+      "content": "const express = require('express');\n\nconst app = express();\n\n// Root route\napp.get('/', (req, res) => {\n    res.send('Hello World!');\n});\n\n// Start the server\napp.listen(3000, () => {\n    console.log('Server is running on port 3000');\n});"
+    },
+    "package.json": {
+      "content": "{\n  \"name\": \"temp-server\",\n  \"version\": \"1.0.0\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.21.2\"\n  }\n}"
+    }
+  });
+  const[currentFile , setCurrectFile] = useState(null);
+  const [openFiles, setopenFiles] = useState([])
 
 
 
@@ -135,9 +148,11 @@ const {user } = useContext(UserContext);
 
     //get online user
 
+    
     receiveMessage("updateUsers" , (data)=>{
       //  console.log("received: count", data);
-       console.log("received count", data.users.length);
+      //  console.log("received count", data.users.length);
+
        setOnlineUsers(data.users.length);
 
     })
@@ -148,11 +163,29 @@ const {user } = useContext(UserContext);
 
   
     // Listen for incoming messages
-    receiveMessage("message", (data) => {
+    receiveMessage("message", async(data) => {
       // console.log("Message received:", data);
       // setRemoteUser(data.from);
 
-      setMessages((prev) => [...prev, { text: data.message, sender: data.from }]);
+      //convert into json formate
+
+      console.log("incomming message : " , data)
+     
+          const messageObj = await JSON.parse(data.message);
+
+          console.log("messageObj :", messageObj);
+
+          if(messageObj.fileTree){
+            setFileTree(messageObj.fileTree);
+          }
+
+        
+      
+          // console.log("Text inside messageObj:", messageObj.text);
+      
+
+      // setMessages((prev) => [...prev, { text: data.message, sender: data.from }]);// normal la/string
+      setMessages((prev) => [...prev, { text: messageObj.text , sender: data.from }]);
     });
 
 
@@ -253,7 +286,7 @@ const toggleSidePanel = () => {
 
 const handlUserMessageSend = async()=>{
   // console.log("message:" , message ,);
-     sendMeesage("message" , message, localStorage.getItem("userId"));
+     sendMeesage("message" ,   message, localStorage.getItem("userId") , mode);
 
     setMessages((prev) => [...prev, { text: message, sender: "client" }]); // Update client messages
     setMessage(""); // Reset input field
@@ -282,168 +315,331 @@ const handlUserMessageSend = async()=>{
    <>
     <main className="w-full h-screen flex">
       {/* 1 */}
-<div className="w-[30%] h-screen flex">
- 
-      {/* Side Panel */}
-      <div
-        className={`side-panel fixed top-0 left-0 h-full w-[350px] bg-white shadow-lg transform transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="p-4">
-         <div className="w-full flex justify-between pr-4 bg-gray-200 pt-3">
-            <h1 className="text-2xl font-bold w-[50%] text-center">Collabroters</h1>
-         <h2 className="text-lg font-bold mb-4 cursor-pointer bg-slate-400 p-1 rounded-full px-3 active:bg-blue-600" onClick={toggleSidePanel}><i className="ri-arrow-left-long-line"></i></h2>      </div>
-         <section className="w-full h-full">
+      <div className="w-[30%] h-screen flex">
       
+            {/* Side Panel */}
+            <div
+              className={`side-panel fixed top-0 left-0 h-full w-[350px] bg-white shadow-lg transform transition-transform duration-300 ${
+                isOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
+            >
+              <div className="p-4">
+              <div className="w-full flex justify-between pr-4 bg-gray-200 pt-3">
+                  <h1 className="text-2xl font-bold w-[50%] text-center">Collabroters</h1>
+              <h2 className="text-lg font-bold mb-4 cursor-pointer bg-slate-400 p-1 rounded-full px-3 active:bg-blue-600" onClick={toggleSidePanel}><i className="ri-arrow-left-long-line"></i></h2>      </div>
+              <section className="w-full h-full">
+            
 
-        {/* User List */}
-        <div className="h-[90%] p-4 overflow-y-auto space-y-4">
+              {/* User List */}
+              <div className="h-[90%] p-4 overflow-y-auto space-y-4">
+                
+                {projectUsers.map((user, index) => (
+
+                  <div
+                    key={index}
+                    className="flex items-center space-x-4 bg-slate-300  p-3 rounded-lg shadow-sm"
+                  >
+                    {/* Dummy profile picture */}
+                    <img
+                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3tCR6ICfkzTmrIugDHksAzpKGe1y8wse7Sg&s"
+                      alt="User Profile"
+                      className="w-10 h-10 rounded-full"
+                    />
+                    {/* User email */}
+                    <span className="text-sm font-medium text-gray-800">
+                      {user.email}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              </section>
           
-          {projectUsers.map((user, index) => (
+
+              </div>
+            </div>
+
+            {/* Main Chat Section */}
+            <section className="left bg-slate-300 w-full h-full">
+              {/* Header */}
+              <header className="bg-gray-500 w-full h-[10%] flex justify-between p-5">
+                
+              <div
+              onClick={()=>setIsModalOpen(true)}
+              className="p-1 cursor-pointer rounded-lg active:border-2 border-white flex items-center">
+                <i className="ri-add-fill text-lg font-semibold">Add Collebroter</i>
+                </div>
+
+              <div>
+                <label htmlFor="public" className="text-lg font-semibold p-2">Public</label>
+                <input type="radio"  value="public" name="mode"  id="public"   onClick={(e)=>{
+                  console.log("btn cliked : " , e.target.value)
+                  setMode(e.target.value);
+                }}/>
+                <label htmlFor="personal" className="text-lg font-semibold p-2">personal</label>
+                <input type="radio"  value="personal" name="mode"  id="personal"   onClick={(e)=>{
+                  console.log("btn cliked : " , e.target.value)
+                  setMode(e.target.value);
+              
+                }}/>
+              </div>
+
+                <i
+                  className="ri-group-line font-semibold text-lg cursor-pointer border-2 border-black p-3 flex justify-center items-center rounded-[50%] hover:bg-orange-500"
+                  onClick={toggleSidePanel}
+                >{project.users.length}</i>
+              
+              </header>
+              <div className="flex justify-center p-1">
+                <h1
+                onClick={()=>{
+                  window.location.reload();
+                }}
+                className="bg-green-500 rounded-lg cursor-pointer p-1 hover:bg-orange-600"
+                >Active Users :({onlineUsers})</h1>
+          
+              </div>
+
+
+      
+              {/* Chat Messages */}
+              <div className="h-[75%] p-4 overflow-y-auto space-y-4">
+                {/* User's message */}
+
+                  {/* <div className="flex flex-col items-end">
+                  <span className="text-sm text-gray-700">user@example.com</span>
+                  <div className="bg-blue-500 text-white px-4 py-2 rounded-lg max-w-[75%]">
+                  {message}
+                  </div>
+                </div> */}
+                
+
+                {/* Other user's message */}
+              {/* <div className="flex flex-col items-start">
+                <span className="text-sm text-gray-700">otheruser@example.com</span>
+                <div className="bg-yellow-100 text-black px-4 py-2 rounded-lg max-w-[75%]">
+                {message}
+                </div>
+              </div> */}
+              
+
+              {/* all messages */}
+
+              <div 
+        ref={messageBoxRef}
+        className="scroll-container h-[480px] overflow-y-scroll pr-4 pl-4"
+      >
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`flex flex-col ${
+              msg.sender === "client" ? "items-end" : "items-start"
+            }`}
+          >
+            <span className="text-sm text-black">
+              {msg.sender === "client" ? "You" : msg.sender}
+            </span>
 
             <div
-              key={index}
-              className="flex items-center space-x-4 bg-slate-300  p-3 rounded-lg shadow-sm"
+              className={`px-4 py-2 rounded-lg max-w-[75%] ${
+                msg.sender === "client"
+                  ? "bg-blue-500 text-white"
+                  : msg.sender === "@Ai"
+                  ? "bg-purple-500 text-black font-bold overflow-auto" // Highlight AI messages
+                  : "bg-yellow-100 text-black"
+              }`}
             >
-              {/* Dummy profile picture */}
-              <img
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3tCR6ICfkzTmrIugDHksAzpKGe1y8wse7Sg&s"
-                alt="User Profile"
-                className="w-10 h-10 rounded-full"
-              />
-              {/* User email */}
-              <span className="text-sm font-medium text-gray-800">
-                {user.email}
-              </span>
+              {msg.sender === "@Ai" 
+              ?
+              // <Markdown>{msg.text}</Markdown>
+            
+              
+              <Markdown
+              options={{
+                overrides: {
+                  code: {
+                    component: ({ children, className }) => {
+                      const language = className ? className.replace("lang-", "") : "javascript";
+                      return (
+                        <SyntaxHighlighter language={language} style={materialDark}>
+                          {children}
+                        </SyntaxHighlighter>
+                      );
+                    },
+                  },
+                },
+              }}
+            >
+              { msg.text }
+            </Markdown>
+
+              : msg.text
+              
+              }
             </div>
-          ))}
-        </div>
-        </section>
-     
-
-        </div>
-      </div>
-
-      {/* Main Chat Section */}
-      <section className="left bg-slate-300 w-full h-full">
-        {/* Header */}
-        <header className="bg-gray-500 w-full h-[10%] flex justify-between p-5">
-          
-        <div
-        onClick={()=>setIsModalOpen(true)}
-        className="p-1 cursor-pointer rounded-lg active:border-2 border-white flex items-center">
-          <i className="ri-add-fill text-lg font-semibold">Add Collebroter</i>
           </div>
-
-          <i
-            className="ri-group-line font-semibold text-lg cursor-pointer border-2 border-black p-3 flex justify-center items-center rounded-[50%] hover:bg-orange-500"
-            onClick={toggleSidePanel}
-          >{project.users.length}</i>
-         
-        </header>
-         <div className="flex justify-center p-1">
-          <h1
-          onClick={()=>{
-            window.location.reload();
-          }}
-          className="bg-green-500 rounded-lg cursor-pointer p-1 hover:bg-orange-600"
-          >Active Users :({onlineUsers})</h1>
-         </div>
- 
-        {/* Chat Messages */}
-        <div className="h-[75%] p-4 overflow-y-auto space-y-4">
-          {/* User's message */}
-
-            {/* <div className="flex flex-col items-end">
-            <span className="text-sm text-gray-700">user@example.com</span>
-            <div className="bg-blue-500 text-white px-4 py-2 rounded-lg max-w-[75%]">
-             {message}
-            </div>
-          </div> */}
-          
-
-          {/* Other user's message */}
-         {/* <div className="flex flex-col items-start">
-           <span className="text-sm text-gray-700">otheruser@example.com</span>
-           <div className="bg-yellow-100 text-black px-4 py-2 rounded-lg max-w-[75%]">
-           {message}
-           </div>
-         </div> */}
-         
-
-         {/* all messages */}
-
-         <div 
-  ref={messageBoxRef}
-  className="scroll-container h-[480px] overflow-y-scroll pr-4 pl-4"
->
-  {messages.map((msg, i) => (
-    <div
-      key={i}
-      className={`flex flex-col ${
-        msg.sender === "client" ? "items-end" : "items-start"
-      }`}
-    >
-      <span className="text-sm text-black">
-        {msg.sender === "client" ? "You" : msg.sender}
-      </span>
-
-      <div
-        className={`px-4 py-2 rounded-lg max-w-[75%] ${
-          msg.sender === "client"
-            ? "bg-blue-500 text-white"
-            : msg.sender === "@Ai"
-            ? "bg-purple-500 text-black font-bold overflow-auto" // Highlight AI messages
-            : "bg-yellow-100 text-black"
-        }`}
-      >
-        {msg.sender == "@Ai" 
-        ?
-        <Markdown>{msg.text}</Markdown>
-        : msg.text
-        
-        }
+        ))}
       </div>
-    </div>
-  ))}
-</div>
 
 
 
 
-         </div>
+              </div>
 
-        {/* Input Field */}
-          <form  onSubmit={(e)=>{
-            e.preventDefault();
-            handlUserMessageSend()
-          }}
-className="h-[10%] flex items-center bg-orange-200"
-          >
-      
-          <input
-          value={message}
-onChange={(e)=>{
-  setMessage(e.target.value);
-}}
+              {/* Input Field */}
+                <form  onSubmit={(e)=>{
+                  e.preventDefault();
+                  handlUserMessageSend()
+                }}
+      className="h-[10%] flex items-center bg-orange-200"
+                >
+            
+                <input
+                value={message}
+      onChange={(e)=>{
+        setMessage(e.target.value);
+      }}
 
-  type="text"
-  className="flex-grow h-4/5 border-none focus:outline-none placeholder-gray-400 px-3"
-  placeholder="Enter Message"
-/>
-<button className="text-3xl p-1 text-blue-500 hover:text-blue-700 focus:outline-none">
-  <i className="ri-send-plane-fill"></i>
-</button>
-    
-          </form>
-      </section>
-</div>
+        type="text"
+        className="flex-grow h-4/5 border-none focus:outline-none placeholder-gray-400 px-3"
+        placeholder="Enter Message"
+      />
+      <button className="text-3xl p-1 text-blue-500 hover:text-blue-700 focus:outline-none">
+        <i className="ri-send-plane-fill"></i>
+      </button>
+          
+                </form>
+            </section>
+      </div>
 
        {/* add user module */}
        {isModalOpen && (
         <UserSelectionModal  users={users}  handleAddUser={handleAddUser} addedUsers={ projectUsers }  setIsModalOpen={setIsModalOpen}  />
       )}
+
+         {/* 2 */}
+      <section className="h-screen flex flex-grow">
+        
+
+
+        {/* expolrer */}
+        <div className="expolere h-full max-w-64 min-w-52 bg-slate-200">
+           <div className="file-tree w-full">
+              {
+                Object.keys(fileTree).map((file , index)=>(
+                  <div key={index} className="tree-element cursor-pointer p-2 px-3 flex flex-col gap-2 bg-slate-300 active:bg-slate-400">
+                  <p className="font-semibold text-lg" 
+                  onClick={()=>{
+                    setCurrectFile(file); //file name set
+                    // setopenFiles([...openFiles , file]) //repated file also push
+                    setopenFiles([ ...new Set([ ...openFiles, file ]) ]); //array
+                  }}
+                  >{file}</p>
+                </div>
+                ))
+              }
+           </div>
+        </div>
+
+        {/* codeEditer */}
+ 
+             {
+            currentFile && (
+              <div className="code_editor flex flex-col flex-grow h-full">
+                      {/* top */}
+                         <div className="top flex">
+                          {
+                            openFiles.map((file , index)=>(
+                              <button
+                              key={index}
+                              onClick={() => setCurrectFile(file)} //setcurrect filename
+                              className={`open-file cursor-pointer p-2 px-4 flex items-center w-fit gap-2 bg-slate-300 ${currentFile === file ? 'bg-slate-500' : ''}`}>
+                              <p
+                                  className='font-semibold text-lg'
+                              >{file}
+                      <i className="ri-close-line px-2" onClick={()=>{
+                        // alert("hii.................")
+                  //    let index = openFiles.indexOf(file);
+                  //    if (index !== -1) {
+                  //     openFiles.splice(index, 1); 
+
+                  // }
+
+                   }}></i> 
+                              </p>
+                          </button>
+                            ))
+                          }
+                   {/* <p className="text-lg font-semibold p-2">{currentFile} */}
+            
+
+                   {/* <i className="ri-close-line px-2" onClick={()=>{
+                    setCurrectFile(null)
+                   }}></i>  */}
+                    {/* </p>  */}
+                         </div>
+
+                      {/* bottom    */}
+                       <div className="bottom flex flex-grow max-w-full overflow-auto">
+                    {
+                      fileTree[currentFile] //currect file all aceess
+                      && (
+
+                        // <textarea
+                        // name="" id=""
+                        // className="w-full h-full bg-slate-200 outline-none p-2"
+                        // value={fileTree[currentFile].content}
+                        // onChange={(e) =>{
+                        //   setFileTree({
+                        //     ...fileTree ,
+                        //     [currentFile]:{
+                        //       content :e.target.value
+                        //     }
+                        //   })
+                        // }}
+                        // >
+                        // </textarea>
+         <div className="code-editor-area h-full overflow-auto flex-grow bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-gray-700">
+    <pre className="hljs h-full p-4 rounded-lg overflow-auto text-sm leading-6 font-mono">
+        <code
+            className="hljs h-full outline-none"
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => {
+                const updatedContent = e.target.innerText;
+                setFileTree((preFileTree) => ({
+                    ...preFileTree,
+                    [currentFile]: {
+                        ...preFileTree[currentFile],//all prefile content
+                        content: updatedContent,
+                    },
+                }));
+            }}
+            dangerouslySetInnerHTML={{
+                __html: hljs.highlight(fileTree[currentFile].content, { language: "javascript" }).value,
+            }}
+            style={{
+                whiteSpace: "pre-wrap",
+                paddingBottom: "25rem",
+                counterSet: "line-numbering",
+                outline: "none",
+            }}
+        />
+    </pre>
+</div>
+
+
+
+
+
+
+                      )
+                    }    
+                       </div>
+              </div>
+            )}
+
+
+      </section>  
 
 
 <ToastContainer/>

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState ,  } from "react"
+import {  useEffect, useState ,  } from "react"
 // import { UserContext } from "../context/UserContext"
 import axiosInstance from "../config/axiosConfig";
 import { toast , ToastContainer } from "react-toastify"
@@ -124,10 +124,14 @@ const handleCancel = () => {
 
   return (
    <>
-    <main className="p-3 flex">
+<main className="p-3 flex">
 
 
 
+        
+
+
+  
           <button
           onClick={()=>setProjectPanel(true)}
           className="border-2 p-2 rounded-md active:bg-yellow-400"
@@ -269,13 +273,15 @@ const handleCancel = () => {
         </form>
       </div>
     </div>   
-   }
+ }
 
 
 
 
 <ToastContainer/>
+
 </main>
+
 <button
 onClick={()=>{
   localStorage.clear("token")
@@ -284,6 +290,6 @@ onClick={()=>{
 }}
 className="bg-red-600 p-3 m-4 rounded-lg text-white">LogOut</button>
  
-   </>
+ </>
   )
 }

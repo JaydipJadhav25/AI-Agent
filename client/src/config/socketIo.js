@@ -88,11 +88,11 @@ export const disconnectSocket = () => {
     }
 };
 
-export const sendMeesage =(eventName , message , sender)=>{
+export const sendMeesage =(eventName , message , sender , mode)=>{
 
     // console.log("sendFunction call : ",eventName , message , sender)
 
-    socket.emit(eventName , {message,sender});
+    socket.emit(eventName , {message,sender , mode});
     
 } 
 

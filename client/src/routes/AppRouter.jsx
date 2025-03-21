@@ -12,6 +12,7 @@ export default function AppRouter() {
 <BrowserRouter>
 
    <Routes>
+    
     <Route  path="/"  element={
       <HomProtedPage>
         <Home/>

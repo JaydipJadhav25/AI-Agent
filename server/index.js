@@ -8,7 +8,11 @@ import cookieParser from "cookie-parser";
 import projectRoutes from "./routes/project.routes.js"
 import aiRoutes from "./routes/ai.routes.js"
 import { authUser } from "./middleware/auth.moddleware.js";
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from "./swagger-output.json" assert { type: "json" };
+// If you're using ES Modules ("type": "module" in package.json), JSON files need to be imported using import ... assert { type: "json" }
 
+//.............................................
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
 
@@ -20,6 +24,9 @@ const server = createServer(app);
 app.use(express.json());
 app.use(express.urlencoded({extended : true}));
 app.use(cookieParser());
+//sawgger setup 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
 // CORS options
