@@ -30,6 +30,7 @@ export  const createProject = async(name , userId )=>{
 export const getUserProject = async(userId)=>{
 
     if(!userId){
+        
         throw new Error("UserId is field required!");
     }
     // const projects = await projectModel.find({users :[userId]});
@@ -74,6 +75,38 @@ export const addUsersInProjects = async(projectId , users , userId) =>{
 return updatedProject;
 
 
+}
+
+export const updateProject = async(projectId , filetree) =>{
+    if(!projectId || !filetree){
+        throw new Error("All field required!");
+    }
+
+
+    //update 
+    // const project = await projectModel.findByIdAndUpdate({
+    //  projectId 
+    // } ,{
+
+    //     filetree
+
+    // } ,{
+    //     new : true
+    // });
+
+    const project = await projectModel.findByIdAndUpdate(
+        projectId,   // Pass only the ID, no need for {_id: projectId}
+        { fileTree : filetree },  // Ensure the correct field name is used
+        { new: true }  // Returns the updated document
+      );
+
+    if(!project){
+        throw new Error("update project filtree error!");
+
+    }
+
+
+    return project;
 }
 
 

@@ -41,6 +41,8 @@ function Project() {
   const[cureentProcess , setCureentProcess ] = useState(null);
   const [logs, setLogs] = useState([]);
   const logRef = useRef(null);
+  const[iFreamUrl , setIfreamUrl] = useState(null);
+  const[runProcess , setRunProcess] = useState(null);
 
 
 
@@ -114,6 +116,7 @@ const {user } = useContext(UserContext);
 
 
   const handleShowUser = async()=>{
+
     const responce = await axiosInstance.get("/user/all" ,{
       headers :{
 
@@ -126,6 +129,23 @@ const {user } = useContext(UserContext);
     setUsers(responce.data)
   }
 
+  //getProject Deatils
+ async function getProjectDetails (projectId){
+
+  const responce = await axiosInstance.get(`/project/get/${projectId}`,{
+    headers :{
+
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+     
+    }
+  });
+
+  console.log("reponse of  getProjectDetails : " , responce.data);
+  
+  setFileTree(responce.data.fileTree || {});
+
+
+  }
 
   
   const userId = localStorage.getItem("userId");
@@ -136,9 +156,10 @@ const {user } = useContext(UserContext);
   
     setProjectUsers(project?.users || []);
     handleShowUser();
+    getProjectDetails(project._id);
   
     // Initialize socket connection
-    console.log("projectId : " , project._id)
+    console.log("projectId : " , project._id);
     initSocket(project._id);
 
 
@@ -146,10 +167,11 @@ const {user } = useContext(UserContext);
     if (!webContainer) {
       getWebContainer()
         .then((container) => {
-          setWebContainer(container);
+            setWebContainer(container);
+            // alert("webCotainer created successfully..........")
         })
         .catch((err) => {
-          console.error("Web container creation error!", err);
+            console.error("Web container creation error!", err);
         });
     }
 
@@ -336,6 +358,67 @@ const handlUserMessageSend = async()=>{
     useEffect(() => {
       scrollToBottom();
     }, [messages]); // Trigger scroll when messages array changes
+
+//handle update / save in database --- filetree
+
+ async function saveFileTree(filetree){
+
+  // console.log("filetree : " , filetree)
+
+  if(!fileTree) {
+
+    toast.error("their is not file to save it!",
+      {
+        position: "top-right",
+        autoClose: 3000,
+      }
+    );
+
+    return ;
+
+  }
+ 
+  try {
+    const response  = await axiosInstance.put("/project/updatefiletree" , {
+      projectId : project._id,
+      fileTree :  filetree
+    },{
+      headers :{
+           Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    })
+
+
+    console.log("Response : " , response.data);
+
+    
+    toast.success(" save code suceessfully ..!", {
+      position: "top-right",
+      autoClose: 3000,
+    });
+
+
+   
+    
+  } catch (error) {
+
+    console.log("error : " , error.message);
+
+    toast.error(
+      error.response?.data?.message || "updatefiletree failed. Please try again!",
+      {
+        position: "top-right",
+        autoClose: 3000,
+      }
+    );
+
+    
+  }
+
+
+ }
+
+
 
   return (
    <>
@@ -545,7 +628,7 @@ const handlUserMessageSend = async()=>{
       )}
 
          {/* 2 */}
-    <section className="right h-screen flex flex-grow">
+    <section className="right h-screen flex flex-grow w-[30%]">
 
     {/* expolrer */}
         <div className="expolere h-full max-w-64 min-w-52 bg-slate-200">
@@ -572,7 +655,7 @@ const handlUserMessageSend = async()=>{
             currentFile && ( */}
 
 
-              <div className="code_editor flex flex-col flex-grow h-full">
+              <div className="code_editor flex flex-col flex-grow h-full w-full">
 
               {/* top */}
             <div className="top flex justify-between w-full">
@@ -631,37 +714,66 @@ const handlUserMessageSend = async()=>{
                         //install imp
                         const installProcess = await webContainer?.spawn("npm" , ["install"]);
                         installProcess.output.pipeTo(new WritableStream({
-                          write(data) {
-                            console.log("installProcess : " ,data);
+                          write(chunk) {
+                            console.log("installProcess : " ,chunk);
                             // setCureentProcess(data);    
-                            setLogs((prevLogs) => [...prevLogs, data]); // Append logs                    
+                            setLogs((prevLogs) => [...prevLogs, chunk]); // Append logs                    
                           }
                         }));
 
+
+                      
+
+
                        }}
+
                       className="p-2 px-4 bg-slate-100 text-lg font-semibold"
                       >setUp</button>
 
                       <button
                        onClick={async()=>{
 
-                          // await webContainer?.mount(fileTree)
+                          await webContainer?.mount(fileTree);
+
+
+                          if(runProcess){
+
+                            runProcess.kill();
+
+                          }
 
                         //runprocess
-
-                        const runProcess = await webContainer?.spawn("npm" , ["start"]);
-                        runProcess.output.pipeTo(new WritableStream({
+                        const tempRunProcess = await webContainer?.spawn("npm" , ["start"]);
+                        tempRunProcess.output.pipeTo(new WritableStream({
                           write(data) {
                             console.log("runProcess : " ,data);
                             // setCureentProcess(data);
                             setLogs((prevLogs) => [...prevLogs, data]); // Append logs
                           }
                         }));
+                        setRunProcess(tempRunProcess);
+
+                        //server run after trigger iframe using events
+                        webContainer?.on("server-ready" , (port , url)=>{
+                          console.log("port : " , port , "Url : " , url);
+                          setIfreamUrl(url);
+                        })
 
                        }}
                       className="p-2 px-4 bg-slate-100 text-lg font-semibold"
                       >Run</button>
-
+                      
+                     {
+                      fileTree && webContainer&& currentFile&&  <button
+                      className="p-2 px-4 bg-slate-100 text-lg font-semibold"
+                      onClick={()=>{
+                         saveFileTree(fileTree);//save file in database
+                        
+                      }}
+                      >
+                        Save
+                      </button>
+                     }
 
 
                     </div>
@@ -696,13 +808,30 @@ const handlUserMessageSend = async()=>{
             suppressContentEditableWarning
             onBlur={(e) => {
                 const updatedContent = e.target.innerText;
-                setFileTree((preFileTree) => ({
-                    ...preFileTree,
-                    [currentFile]: {
-                        ...preFileTree[currentFile],//all prefile content
-                        content: updatedContent,
-                    },
-                }));
+                const ft = {
+                  ...fileTree , 
+                  [currentFile] : {
+                    file : {
+                      contents: updatedContent,
+                    }
+                  }
+                }
+                // setFileTree((preFileTree) => ({
+                //     ...preFileTree,
+                //     [currentFile]: {
+                //        file :{
+                //         ...preFileTree[currentFile].file,//all prefile content
+                //         contents: updatedContent,
+                //        }
+                //     },
+                // }));
+
+                setFileTree(ft);//set file tree in state
+               // saveFileTree(ft);//save file in database
+
+
+
+
             }}
             dangerouslySetInnerHTML={{
                 __html: hljs.highlight(fileTree[currentFile].file.contents, { language: "javascript" }).value,
@@ -722,7 +851,8 @@ const handlUserMessageSend = async()=>{
 
     <div 
       ref={logRef}
-      className="bg-black text-green-400 p-4 h-64 overflow-y-auto rounded-lg font-mono"
+      // className="bg-black text-green-400 p-4 h-64 overflow-y-auto rounded-lg font-mono overflow-hidden"
+      className="bg-black text-green-400 p-4 h-64 rounded-lg font-mono overflow-hidden"
     >
  {logs.map((log, index) => (
         <div key={index}>{log}</div>
@@ -737,6 +867,35 @@ const handlUserMessageSend = async()=>{
               </div>
 
                  {/* )} */}
+
+
+
+       {/* output showw */}
+
+     
+      {
+        iFreamUrl &&  (
+
+          <div className="flex flex-col h-full w-[60%] overflow-hidden">
+          <div className="addres-bar">
+            <input
+              type="text"
+              value={iFreamUrl}
+              onChange={(e) => setIfreamUrl(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded hover:bg-yellow-200"
+            />
+          </div>
+          <iframe
+            src={iFreamUrl}
+            className="w-full h-full border-none p-4"
+            scrolling="no"
+          ></iframe>
+        </div>
+        
+        )
+       } 
+    
+              
 
 
       </section>  

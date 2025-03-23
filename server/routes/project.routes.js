@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { addUser, allProject, createProject, getProjectDetailes } from "../controllers/project.controller.js";
+import { addUser, allProject, createProject, getProjectDetailes, updatefileTree } from "../controllers/project.controller.js";
 import {authUser} from "../middleware/auth.moddleware.js"
 import { body } from "express-validator";
 
@@ -28,7 +28,10 @@ router.put("/adduser" , authUser ,
     addUser
 )
 
+
 router.get("/get/:projectId" , authUser ,getProjectDetailes);
+
+router.put("/updatefiletree" , authUser,  updatefileTree);
 
 
 export default router;

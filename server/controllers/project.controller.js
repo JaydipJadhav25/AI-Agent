@@ -104,12 +104,16 @@ const getProjectDetailes = async(req, res) =>{
 
   const {projectId} = req.params;
 
+  console.log("projectid : " , projectId);
+
   try {
 
     const project = await projectModel.findById({_id : projectId}).populate("users");
 
     if(!project){
+
       throw new Error("fetch project datiles error");
+
     }
 
     return res.status(201).json(project);
@@ -126,5 +130,34 @@ const getProjectDetailes = async(req, res) =>{
 }
 
 
+const updatefileTree = async(req ,res) =>{
+  const { projectId , fileTree} = req.body;
 
-export { createProject , allProject , addUser  , getProjectDetailes}
+
+  console.log("filtree is coming : " , fileTree);
+
+  if(!projectId || !fileTree){
+    throw new Error("projectId and filetree is requried...........");
+  }
+
+  try {
+    
+    const project = await projectService.updateProject(projectId, fileTree);
+
+    if(!project){
+      throw new Error("fetch project datiles error");
+    }
+
+    return res.status(201).json(project);
+    
+
+  } catch (error) {
+    return res.status(401).json({ message : error.message});
+    
+  }
+
+
+}
+
+
+export { createProject , allProject , addUser  , getProjectDetailes  , updatefileTree}

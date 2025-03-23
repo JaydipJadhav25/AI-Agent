@@ -19,6 +19,8 @@ const model = genAI.getGenerativeModel({
     Examples: 
 
     <example>
+     IMPORTANT : don't use file name like routes/index.js 
+     IMPORTANT : follow give structure 
     user:Create an express application 
     response: {
 
@@ -31,20 +33,24 @@ const model = genAI.getGenerativeModel({
                 contents: "
                 const express = require('express');
 
+
                 const app = express();
 
               app.use(express.json());
-            app.use(express.urlencoded({extended : true}));
+                app.use(express.urlencoded({extended : true}));
+         
 
 
                 app.get('/', (req, res) => {
-                    res.send('Hello World!');
+                    res.send('Hello World! 🥳');
+            
                 });
-
 
                 app.listen(8000, () => {
                     console.log('Server is running on port 8000');
                 })
+
+                
                 "
             
         },
@@ -54,7 +60,7 @@ const model = genAI.getGenerativeModel({
             file: {
                 contents: "
 
-                {
+                     {
                     "name": "temp-server",
                     "version": "1.0.0",
                     "main": "index.js",
@@ -68,7 +74,7 @@ const model = genAI.getGenerativeModel({
                     "dependencies": {
                         "express": "^4.21.2"
                     }
-                  }
+
                 "
             }
 
