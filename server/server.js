@@ -107,7 +107,7 @@ io.on("connect", (socket) => {
             const replay = await genrateResult(prompt)
 
             // console.log("Message for ai!" , prompt);
-            // console.log("replay  form ai!" , replay);
+            console.log("replay  form ai!" , replay);
 
 
         

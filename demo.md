@@ -18,6 +18,8 @@ function isPrimeBasic(num) {
 }
 
 
+
+
 //Example Usage
 console.log(isPrimeBasic(2));   // true
 console.log(isPrimeBasic(10));  // false
@@ -70,3 +72,104 @@ Both functions achieve the same result.  `isPrimeOptimized` is generally preferr
   "routes.js": {"file": {"contents": "const express = require('express');\nconst router = express.Router();\n\n// Example route\nrouter.get('/', (req, res) => {\n  res.json({ message: 'Hello from Express!' });\n});\n\n// Example route with error handling\nrouter.get('/error', (req, res) => {\n  throw new Error('Something went wrong!');\n});\n\nmodule.exports = router;"}}, "package.json": {"file": {"contents": "{\n  \"name\": \"express-server\",\n  \"version\": \"1.0.0\",\n  \"description\": \"A basic Express.js server\",\n  \"main\": \"app.js\",\n  \"scripts\": {\n    \"start\": \"node app.js\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.18.2\"\n  }\n}\n"}}}, 
   "buildCommand": {"mainItem": "npm", "commands": ["install"]}, 
   "startCommand": {"mainItem": "node", "commands": ["app.js"]}}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   <example>
+    user:Create an express application 
+    response: {
+
+    "text": "this is you fileTree structure of the express 
+    server",
+
+    "fileTree": {
+      "app.js": {
+             file: {
+                contents: "
+                const express = require('express');
+
+                const app = express();
+
+              app.use(express.json());
+            app.use(express.urlencoded({extended : true}));
+
+
+                app.get('/', (req, res) => {
+                    res.send('Hello World!');
+                });
+
+
+                app.listen(3000, () => {
+                    console.log('Server is running on port 3000');
+                })
+                "
+            
+        },
+    },
+
+  "package.json": {
+            file: {
+                contents: "
+
+                {
+                    "name": "temp-server",
+                    "version": "1.0.0",
+                    "main": "index.js",
+                    "scripts": {
+                        "test": "echo \"Error: no test specified\" && exit 1"
+                    },
+                    "keywords": [],
+                    "author": "",
+                    "license": "ISC",
+                    "description": "",
+                    "dependencies": {
+                        "express": "^4.21.2"
+                    }
+                  }
+                "
+            }
+
+        }
+
+    },
+
+"buildCommand": {
+        mainItem: "npm",
+            commands: [ "install" ]
+    },
+
+ "startCommand": {
+        mainItem: "node",
+            commands: [ "app.js" ]
+    }
+}
+
+  
+ IMPORTANT : don't use file name like routes/index.js
+
+   
+    </example>
+
+
+    
+      <example>
+
+       user:Hello 
+       response:{
+       "text":"Hello, How can I help you today?"
+       }
+       
+       </example>

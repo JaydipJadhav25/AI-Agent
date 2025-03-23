@@ -13,6 +13,9 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import hljs from 'highlight.js';
 import "highlight.js/styles/atom-one-dark.css"; // VS Code-like theme
+import {getWebContainer } from "../config/webContainer"
+
+
 
 
 
@@ -31,16 +34,13 @@ function Project() {
   // const[remoteUser , setRemoteUser] = useState(null);
   const[onlineUsers , setOnlineUsers] = useState(0);
   const[mode , setMode] = useState("public");
-  const[fileTree , setFileTree] = useState({
-    "app.js": {
-      "content": "const express = require('express');\n\nconst app = express();\n\n// Root route\napp.get('/', (req, res) => {\n    res.send('Hello World!');\n});\n\n// Start the server\napp.listen(3000, () => {\n    console.log('Server is running on port 3000');\n});"
-    },
-    "package.json": {
-      "content": "{\n  \"name\": \"temp-server\",\n  \"version\": \"1.0.0\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.21.2\"\n  }\n}"
-    }
-  });
+  const[fileTree , setFileTree] = useState({});
   const[currentFile , setCurrectFile] = useState(null);
-  const [openFiles, setopenFiles] = useState([])
+  const [openFiles, setopenFiles] = useState([]);
+  const [webContainer, setWebContainer] = useState(null);
+  const[cureentProcess , setCureentProcess ] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const logRef = useRef(null);
 
 
 
@@ -135,16 +135,25 @@ const {user } = useContext(UserContext);
     if (!project) return; // Ensure project is defined
   
     setProjectUsers(project?.users || []);
-
     handleShowUser();
   
     // Initialize socket connection
     console.log("projectId : " , project._id)
     initSocket(project._id);
 
+
+    //create to check exsiting webContainers
+    if (!webContainer) {
+      getWebContainer()
+        .then((container) => {
+          setWebContainer(container);
+        })
+        .catch((err) => {
+          console.error("Web container creation error!", err);
+        });
+    }
+
      sendMeesage("joinProject" , project._id , userId);
-
-
 
     //get online user
 
@@ -173,11 +182,27 @@ const {user } = useContext(UserContext);
      
           const messageObj = await JSON.parse(data.message);
 
+          // const messageObj = await JSON.parse(data.message.trim());
+
+
           console.log("messageObj :", messageObj);
 
-          if(messageObj.fileTree){
+          console.log("filetree : " , messageObj.fileTree);
+
+          // if(messageObj.fileTree){
+
+          //   setFileTree(messageObj.fileTree);
+          // }
+
+          if (messageObj?.fileTree && typeof messageObj.fileTree === "object") {
+
+            //mount the file strucher in webcontainer
+            webContainer?.mount(messageObj.fileTree);
+
             setFileTree(messageObj.fileTree);
+
           }
+          
 
         
       
@@ -197,20 +222,30 @@ const {user } = useContext(UserContext);
   return () => {
     // Notify server that the user left the project
     // socket.emit("leaveProject", { userId, projectId });
-    console.log("User left project:");
+    // console.log("User left project:");
     sendMeesage("leaveProject",project._id , userId)
 };
 
 
-  }, [project, userId]);
+  }, [project, userId ]);
 
 
+//checking for webcontainer vlaue is updatinng
+  useEffect(() => {
+    if (webContainer) {
+      console.log("Updated web container:", webContainer);
+      // alert("Web container created successfully!");
+    }
+  }, [webContainer]);
 
 
-
-
-
-
+  //////////////////// project log process
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight; // Auto-scroll
+    }
+  }, [logs]);
+  
 
   
 //    // Notify the server when the user leaves the page
@@ -257,15 +292,6 @@ const {user } = useContext(UserContext);
         document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
 }, [location, project._id, userId]);
-
-
-
-
-
-
-
-
-
 
 
 
@@ -317,6 +343,7 @@ const handlUserMessageSend = async()=>{
       {/* 1 */}
       <div className="w-[30%] h-screen flex">
       
+
             {/* Side Panel */}
             <div
               className={`side-panel fixed top-0 left-0 h-full w-[350px] bg-white shadow-lg transform transition-transform duration-300 ${
@@ -470,6 +497,7 @@ const handlUserMessageSend = async()=>{
               }}
             >
               { msg.text }
+
             </Markdown>
 
               : msg.text
@@ -517,11 +545,9 @@ const handlUserMessageSend = async()=>{
       )}
 
          {/* 2 */}
-      <section className="h-screen flex flex-grow">
-        
+    <section className="right h-screen flex flex-grow">
 
-
-        {/* expolrer */}
+    {/* expolrer */}
         <div className="expolere h-full max-w-64 min-w-52 bg-slate-200">
            <div className="file-tree w-full">
               {
@@ -542,11 +568,16 @@ const handlUserMessageSend = async()=>{
 
         {/* codeEditer */}
  
-             {
-            currentFile && (
+             {/* {
+            currentFile && ( */}
+
+
               <div className="code_editor flex flex-col flex-grow h-full">
-                      {/* top */}
-                         <div className="top flex">
+
+              {/* top */}
+            <div className="top flex justify-between w-full">
+                  <div className="file flex">
+
                           {
                             openFiles.map((file , index)=>(
                               <button
@@ -558,13 +589,13 @@ const handlUserMessageSend = async()=>{
                               >{file}
                       <i className="ri-close-line px-2" onClick={()=>{
                         // alert("hii.................")
-                  //    let index = openFiles.indexOf(file);
-                  //    if (index !== -1) {
-                  //     openFiles.splice(index, 1); 
-
-                  // }
-
-                   }}></i> 
+                        //    let index = openFiles.indexOf(file);
+                        //    if (index !== -1) {
+                          //     openFiles.splice(index, 1); 
+                          
+                          // }
+                          
+                        }}></i> 
                               </p>
                           </button>
                             ))
@@ -574,9 +605,68 @@ const handlUserMessageSend = async()=>{
 
                    {/* <i className="ri-close-line px-2" onClick={()=>{
                     setCurrectFile(null)
-                   }}></i>  */}
+                    }}></i>  */}
                     {/* </p>  */}
-                         </div>
+                    </div>
+
+                    <div className="action">
+
+                      <button
+                       onClick={async()=>{
+
+                        //mount the filetree
+                          await webContainer?.mount(fileTree);
+
+                          //check files
+                      //   const isProcess = await webContainer?.spawn('ls');
+                      //  //
+                      //   isProcess.output.pipeTo(new WritableStream({
+                      //     write(data) {
+                      //       console.log("data of files : " ,data);
+                      //       // alert("data of files : " ,data)
+                      //     }
+                      //   }));
+                        //
+
+                        //install imp
+                        const installProcess = await webContainer?.spawn("npm" , ["install"]);
+                        installProcess.output.pipeTo(new WritableStream({
+                          write(data) {
+                            console.log("installProcess : " ,data);
+                            // setCureentProcess(data);    
+                            setLogs((prevLogs) => [...prevLogs, data]); // Append logs                    
+                          }
+                        }));
+
+                       }}
+                      className="p-2 px-4 bg-slate-100 text-lg font-semibold"
+                      >setUp</button>
+
+                      <button
+                       onClick={async()=>{
+
+                          // await webContainer?.mount(fileTree)
+
+                        //runprocess
+
+                        const runProcess = await webContainer?.spawn("npm" , ["start"]);
+                        runProcess.output.pipeTo(new WritableStream({
+                          write(data) {
+                            console.log("runProcess : " ,data);
+                            // setCureentProcess(data);
+                            setLogs((prevLogs) => [...prevLogs, data]); // Append logs
+                          }
+                        }));
+
+                       }}
+                      className="p-2 px-4 bg-slate-100 text-lg font-semibold"
+                      >Run</button>
+
+
+
+                    </div>
+
+               </div>
 
                       {/* bottom    */}
                        <div className="bottom flex flex-grow max-w-full overflow-auto">
@@ -615,7 +705,7 @@ const handlUserMessageSend = async()=>{
                 }));
             }}
             dangerouslySetInnerHTML={{
-                __html: hljs.highlight(fileTree[currentFile].content, { language: "javascript" }).value,
+                __html: hljs.highlight(fileTree[currentFile].file.contents, { language: "javascript" }).value,
             }}
             style={{
                 whiteSpace: "pre-wrap",
@@ -625,18 +715,28 @@ const handlUserMessageSend = async()=>{
             }}
         />
     </pre>
+
+
+
+    {/* show running process */}
+
+    <div 
+      ref={logRef}
+      className="bg-black text-green-400 p-4 h-64 overflow-y-auto rounded-lg font-mono"
+    >
+ {logs.map((log, index) => (
+        <div key={index}>{log}</div>
+      ))} 
+    </div>
+       
 </div>
-
-
-
-
-
 
                       )
                     }    
                        </div>
               </div>
-            )}
+
+                 {/* )} */}
 
 
       </section>  

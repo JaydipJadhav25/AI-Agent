@@ -12,6 +12,7 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@remixicon/react": "^4.6.0",
+    "@webcontainer/api": "^1.5.1-internal.10",
     "axios": "^1.7.9",
     "flowbite": "^3.1.2",
     "flowbite-react": "^0.10.2",
