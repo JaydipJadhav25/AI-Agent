@@ -200,7 +200,7 @@ const {user } = useContext(UserContext);
 
       //convert into json formate
 
-      console.log("incomming message : " , data)
+      console.log("incomming message : " , data.message);
      
           const messageObj = await JSON.parse(data.message);
 
@@ -209,7 +209,7 @@ const {user } = useContext(UserContext);
 
           console.log("messageObj :", messageObj);
 
-          console.log("filetree : " , messageObj.fileTree);
+          // console.log("filetree : " , messageObj.fileTree);
 
           // if(messageObj.fileTree){
 
@@ -229,10 +229,19 @@ const {user } = useContext(UserContext);
         
       
           // console.log("Text inside messageObj:", messageObj.text);
-      
 
-      // setMessages((prev) => [...prev, { text: data.message, sender: data.from }]);// normal la/string
-      setMessages((prev) => [...prev, { text: messageObj.text , sender: data.from }]);
+
+          //check ai replay 
+       
+
+              setMessages((prev) => [...prev, { text: messageObj.text , sender: data.from }]);
+            
+            
+            //send normal to chat
+        //  setMessages((prev) => [...prev, { text: data.message, sender: data.from }]);// normal la/string
+
+          
+      
     });
 
 

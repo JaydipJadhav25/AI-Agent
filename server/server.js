@@ -84,7 +84,7 @@ io.on("connect", (socket) => {
 
         
 
-        // console.log("data is : " , msg);
+        console.log("data is : " , msg);
         //check message for ai
         const isMessageForAi= msg.message.includes('@ai')
 
@@ -92,7 +92,8 @@ io.on("connect", (socket) => {
 
         //ai message alos send in all which users work on project
             socket.to(socket.projectId).emit("message", {
-                message: msg.message,
+                // message: msg.message,
+                message: '{ "text": "' + msg.message + '" }',
                 from: user.email,
             });
 
